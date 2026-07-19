@@ -45,4 +45,3 @@ This repository is equipped with custom AI agent skills (located in `.agents/ski
 - **`add-action`**: Guide to adding new logical actions across providers.
 - **`debug-hotkey`**: Diagnostic guide and checklist for troubleshooting unresponsive global hotkeys.
 - **`wpf-best-practices` & `dotnet-best-practices`**: Best practices for maintaining clean, decoupled MVVM architecture and C# standards.
-# ai-commander
