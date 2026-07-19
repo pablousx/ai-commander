@@ -1,7 +1,6 @@
-namespace AICommander.Core.Providers.Antigravity
+namespace AICommander.Core.Providers.Antigravity;
+
+public class AntigravityProvider : BaseProvider
 {
-    public class AntigravityProvider : BaseProvider
-    {
-        public override string Name => "antigravity";
-    }
+    public override string Name => "antigravity";
 }

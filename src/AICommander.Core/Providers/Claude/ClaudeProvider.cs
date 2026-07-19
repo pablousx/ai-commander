@@ -1,7 +1,6 @@
-namespace AICommander.Core.Providers.Claude
+namespace AICommander.Core.Providers.Claude;
+
+public class ClaudeProvider : BaseProvider
 {
-    public class ClaudeProvider : BaseProvider
-    {
-        public override string Name => "claude";
-    }
+    public override string Name => "claude";
 }

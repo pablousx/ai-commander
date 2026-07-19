@@ -1,21 +1,47 @@
 using System.Threading.Tasks;
 using AICommander.Core.Config;
 
-namespace AICommander.Core.Providers
+namespace AICommander.Core.Providers;
+
+/// <summary>
+/// Interface representing an AI agent provider.
+/// </summary>
+public interface IProvider
 {
-    public interface IProvider
-    {
-        string Name { get; }
-        string ProcessName { get; }
-        void Initialize(ProviderConfig config);
-        bool IsRunning();
-        bool IsVisible();
-        
-        /// <summary>
-        /// Ejecuta una acción enviando las teclas de acción del provider
-        /// a la ventana objetivo. Las teclas vienen de la config YAML,
-        /// NO de la hotkey que presionó el usuario.
-        /// </summary>
-        Task ExecuteAction(string actionName, ActionConfig actionConfig);
-    }
+    /// <summary>
+    /// Gets the logical name of the provider.
+    /// </summary>
+    string Name { get; }
+
+    /// <summary>
+    /// Gets the process name of the target application.
+    /// </summary>
+    string ProcessName { get; }
+
+    /// <summary>
+    /// Initializes the provider with its configuration.
+    /// </summary>
+    /// <param name="config">The configuration for this provider.</param>
+    void Initialize(ProviderConfig config);
+
+    /// <summary>
+    /// Checks if the target process is currently running.
+    /// </summary>
+    /// <returns>True if running; otherwise, false.</returns>
+    bool IsRunning();
+
+    /// <summary>
+    /// Checks if the target process is currently visible.
+    /// </summary>
+    /// <returns>True if visible; otherwise, false.</returns>
+    bool IsVisible();
+    
+    /// <summary>
+    /// Executes an action by sending the provider's action keys
+    /// to the target window. The keys are configured in the YAML file,
+    /// NOT the hotkey that the user pressed.
+    /// </summary>
+    /// <param name="actionName">The name of the action to execute.</param>
+    /// <param name="actionConfig">The configuration of the action.</param>
+    Task ExecuteAction(string actionName, ActionConfig actionConfig);
 }

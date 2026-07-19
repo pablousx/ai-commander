@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using AICommander.Core.Config;
 using AICommander.Core.HotkeyManager;
@@ -11,162 +12,151 @@ using AICommander.Core.Providers.Antigravity;
 using AICommander.Core.Providers.VSCode;
 using AICommander.Core.Providers.Claude;
 using AICommander.Core.Actions;
+using AICommander.Core.Utilities;
 using System.Windows.Interop;
 using Hardcodet.Wpf.TaskbarNotification;
 
-namespace AICommander.App
+namespace AICommander.App;
+
+public partial class App : Application
 {
-    public partial class App : Application
+    private ServiceProvider? _serviceProvider;
+    private GlobalHotkeyManager? _hotkeyManager;
+    private TaskbarIcon? _taskbarIcon;
+    private MainWindow? _mainWindow;
+
+    private void Application_Startup(object sender, StartupEventArgs e)
     {
-        private GlobalHotkeyManager _hotkeyManager;
-        private ProviderRegistry _providerRegistry;
-        private ActionDispatcher _actionDispatcher;
-        private AICommanderConfig _config;
-        private ILogger<ActionDispatcher> _logger;
-        private TaskbarIcon _taskbarIcon;
-        private MainWindow _mainWindow;
-
-        private void Application_Startup(object sender, StartupEventArgs e)
+        try
         {
-            File.AppendAllText("startup_log.txt", "1. Entered Application_Startup\n");
-            try
-            {
-                File.AppendAllText("startup_log.txt", "2. Creating LoggerFactory\n");
-                // Setup minimal logging
-                using var loggerFactory = LoggerFactory.Create(builder =>
-                {
-                    builder.AddConsole();
-                });
-                _logger = loggerFactory.CreateLogger<ActionDispatcher>();
+            var services = new ServiceCollection();
+            ConfigureServices(services);
+            _serviceProvider = services.BuildServiceProvider();
 
-                File.AppendAllText("startup_log.txt", "3. Loading config\n");
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string configPath = Path.Combine(baseDir, "config", "ai-commander.yaml");
-
-            // Si estamos en entorno de desarrollo (ej. bin/Debug/net8.0-windows), subir en los directorios
-            DirectoryInfo dir = new DirectoryInfo(baseDir);
-            while (dir != null && !File.Exists(configPath))
-            {
-                configPath = Path.Combine(dir.FullName, "config", "ai-commander.yaml");
-                dir = dir.Parent;
-            }
-
-            // Fallback final
-            if (!File.Exists(configPath))
-            {
-                configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config", "ai-commander.yaml");
-            }
-
-            try
-            {
-                _config = ConfigLoader.Load(configPath);
-                File.AppendAllText("startup_log.txt", "4. Config loaded successfully\n");
-            }
-            catch (Exception ex)
-            {
-                File.AppendAllText("startup_log.txt", $"Config Load Error: {ex.Message}\n");
-                MessageBox.Show($"Failed to load configuration: {ex.Message}", "AI Commander", MessageBoxButton.OK, MessageBoxImage.Error);
-                Current.Shutdown();
-                return;
-            }
-
-            File.AppendAllText("startup_log.txt", "5. Initializing Provider Registry\n");
-            _providerRegistry = new ProviderRegistry();
-            var providers = new List<IProvider>
-            {
-                new AntigravityProvider(),
-                new VSCodeProvider(),
-                new ClaudeProvider()
-            };
-            _providerRegistry.Initialize(_config, providers);
-
-            // Init Dispatcher
-            _actionDispatcher = new ActionDispatcher(_providerRegistry, _config, _logger);
-
-            // Init Hotkey Manager using a dummy window handle since WPF App doesn't have one initially
-            _mainWindow = new MainWindow();
+            // Initialize MainWindow (creates HWND needed for HotkeyManager)
+            _mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             var helper = new WindowInteropHelper(_mainWindow);
-            helper.EnsureHandle(); // creates handle without showing window
+            helper.EnsureHandle();
 
-            _hotkeyManager = new GlobalHotkeyManager(helper.Handle);
+            // Initialize Hotkey Manager
+            _hotkeyManager = new GlobalHotkeyManager(helper.Handle, _serviceProvider.GetRequiredService<ILogger<GlobalHotkeyManager>>());
             
-            File.AppendAllText("startup_log.txt", "6. Registering hotkeys\n");
-            RegisterHotkeys();
+            RegisterHotkeys(_serviceProvider.GetRequiredService<AICommanderConfig>(), _serviceProvider.GetRequiredService<ActionDispatcher>());
+            SetupTaskbarIcon();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Fatal error during startup: {ex}", "AI Commander Crash", MessageBoxButton.OK, MessageBoxImage.Error);
+            Current.Shutdown();
+        }
+    }
+    
+    private void ConfigureServices(IServiceCollection services)
+    {
+        // Logging
+        services.AddLogging(builder => 
+        {
+            builder.AddConsole();
+        });
 
-            File.AppendAllText("startup_log.txt", "7. Initializing TaskbarIcon\n");
-            // Init Taskbar Icon programmatically for now
-            _taskbarIcon = new TaskbarIcon
-            {
-                Icon = System.Drawing.SystemIcons.Application,
-                ToolTipText = "AI Commander"
-            };
+        // Config
+        var configPath = GetConfigPath();
+        var config = ConfigLoader.Load(configPath);
+        services.AddSingleton(config);
 
-            // Simple Context Menu
-            var menu = new System.Windows.Controls.ContextMenu();
-            var exitItem = new System.Windows.Controls.MenuItem { Header = "Exit" };
-            exitItem.Click += (s, ev) => Current.Shutdown();
+        // Providers
+        services.AddSingleton<IProvider, AntigravityProvider>();
+        services.AddSingleton<IProvider, VSCodeProvider>();
+        services.AddSingleton<IProvider, ClaudeProvider>();
 
-            var settingsItem = new System.Windows.Controls.MenuItem { Header = "Settings" };
-            settingsItem.Click += (s, ev) => _mainWindow.Show();
+        // Registry & Dispatcher
+        services.AddSingleton<ProviderRegistry>(sp => 
+        {
+            var registry = new ProviderRegistry();
+            registry.Initialize(sp.GetRequiredService<AICommanderConfig>(), sp.GetServices<IProvider>());
+            return registry;
+        });
+        
+        services.AddSingleton<ActionDispatcher>();
 
-            menu.Items.Add(settingsItem);
-            menu.Items.Add(new System.Windows.Controls.Separator());
-            menu.Items.Add(exitItem);
+        // Windows
+        services.AddSingleton<MainWindow>();
+    }
 
-            _taskbarIcon.ContextMenu = menu;
-            File.AppendAllText("startup_log.txt", "8. Setup complete, exiting Application_Startup\n");
-            }
-            catch (Exception ex)
-            {
-                File.AppendAllText("startup_log.txt", $"FATAL EXCEPTION: {ex.ToString()}\n");
-                MessageBox.Show($"Fatal error during startup: {ex.ToString()}", "AI Commander Crash", MessageBoxButton.OK, MessageBoxImage.Error);
-                Current.Shutdown();
-            }
+    private static string GetConfigPath()
+    {
+        string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        string configPath = Path.Combine(baseDir, "config", "ai-commander.yaml");
+
+        DirectoryInfo? dir = new DirectoryInfo(baseDir);
+        while (dir != null && !File.Exists(configPath))
+        {
+            configPath = Path.Combine(dir.FullName, "config", "ai-commander.yaml");
+            dir = dir.Parent;
         }
 
-        private void RegisterHotkeys()
+        if (!File.Exists(configPath))
         {
-            // Simple mapping from config
-            foreach (var kvp in _config.Hotkeys)
-            {
-                var keys = kvp.Key.Split('+').Select(k => k.Trim().ToLower());
-                uint modifiers = 0;
-                uint vk = 0;
+            configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config", "ai-commander.yaml");
+        }
+        return configPath;
+    }
 
-                foreach (var key in keys)
+    private void RegisterHotkeys(AICommanderConfig config, ActionDispatcher dispatcher)
+    {
+        foreach (var kvp in config.Hotkeys)
+        {
+            var keys = kvp.Key.Split('+');
+            var (modifiers, vk) = KeyParser.ParseHotkey(keys);
+
+            if (vk != 0 && _hotkeyManager != null)
+            {
+                var action = kvp.Value;
+                _hotkeyManager.Register(modifiers, vk, async () =>
                 {
-                    if (key == "ctrl") modifiers |= 0x0002;
-                    else if (key == "alt") modifiers |= 0x0001;
-                    else if (key == "shift") modifiers |= 0x0004;
-                    else if (key == "win") modifiers |= 0x0008;
-                    else
+                    // Visual feedback
+                    if (_taskbarIcon != null)
                     {
-                        // Parse simple key
-                        if (key.Length == 1)
+                        // Fire-and-forget UI update
+                        _ = Current.Dispatcher.InvokeAsync(() => 
                         {
-                            vk = (uint)char.ToUpper(key[0]);
-                        }
-                        else if (key == "escape") vk = 0x1B;
-                        // More key parsing needed for production
+                            _taskbarIcon.ShowBalloonTip("Action Triggered", $"Executing: {action}", BalloonIcon.Info);
+                        });
                     }
-                }
-
-                if (vk != 0)
-                {
-                    var action = kvp.Value;
-                    _hotkeyManager.Register(modifiers, vk, async () =>
-                    {
-                        await _actionDispatcher.DispatchAsync(action);
-                    });
-                }
+                    
+                    await dispatcher.DispatchAsync(action).ConfigureAwait(false);
+                });
             }
         }
-
-        protected override void OnExit(ExitEventArgs e)
+    }
+    
+    private void SetupTaskbarIcon()
+    {
+        _taskbarIcon = new TaskbarIcon
         {
-            _hotkeyManager?.Dispose();
-            _taskbarIcon?.Dispose();
-            base.OnExit(e);
-        }
+            Icon = System.Drawing.SystemIcons.Application,
+            ToolTipText = "AI Commander"
+        };
+
+        var menu = new System.Windows.Controls.ContextMenu();
+        var exitItem = new System.Windows.Controls.MenuItem { Header = "Exit" };
+        exitItem.Click += (s, ev) => Current.Shutdown();
+
+        var settingsItem = new System.Windows.Controls.MenuItem { Header = "Settings" };
+        settingsItem.Click += (s, ev) => _mainWindow?.Show();
+
+        menu.Items.Add(settingsItem);
+        menu.Items.Add(new System.Windows.Controls.Separator());
+        menu.Items.Add(exitItem);
+
+        _taskbarIcon.ContextMenu = menu;
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        _hotkeyManager?.Dispose();
+        _taskbarIcon?.Dispose();
+        (_serviceProvider as IDisposable)?.Dispose();
+        base.OnExit(e);
     }
 }

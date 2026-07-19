@@ -2,64 +2,72 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
-namespace AICommander.Core.HotkeyManager
+namespace AICommander.Core.HotkeyManager;
+
+/// <summary>
+/// Manages registration and routing of global hotkeys.
+/// </summary>
+public class GlobalHotkeyManager : IDisposable
 {
-    public class GlobalHotkeyManager : IDisposable
+    [DllImport("user32.dll")]
+    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+    [DllImport("user32.dll")]
+    private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+    private const int WM_HOTKEY = 0x0312;
+
+    private readonly IntPtr _hWnd;
+    private readonly ILogger<GlobalHotkeyManager> _logger;
+    private int _currentId = 0;
+    private readonly Dictionary<int, Action> _hotkeys = new();
+
+    public GlobalHotkeyManager(IntPtr hWnd, ILogger<GlobalHotkeyManager> logger)
     {
-        [DllImport("user32.dll")]
-        private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+        _hWnd = hWnd;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ComponentDispatcher.ThreadPreprocessMessage += ThreadPreprocessMessageMethod;
+    }
 
-        [DllImport("user32.dll")]
-        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
-
-        private const int WM_HOTKEY = 0x0312;
-
-        private IntPtr _hWnd;
-        private int _currentId = 0;
-        private Dictionary<int, Action> _hotkeys = new Dictionary<int, Action>();
-
-        public GlobalHotkeyManager(IntPtr hWnd)
+    /// <summary>
+    /// Registers a global hotkey with the OS.
+    /// </summary>
+    public void Register(uint modifiers, uint key, Action callback)
+    {
+        _currentId++;
+        if (RegisterHotKey(_hWnd, _currentId, modifiers, key))
         {
-            _hWnd = hWnd;
-            ComponentDispatcher.ThreadPreprocessMessage += ThreadPreprocessMessageMethod;
+            _hotkeys.Add(_currentId, callback);
+            _logger.LogInformation($"Successfully registered hotkey (Modifiers: {modifiers}, Key: {key})");
         }
-
-        public void Register(uint modifiers, uint key, Action callback)
+        else
         {
-            _currentId++;
-            if (RegisterHotKey(_hWnd, _currentId, modifiers, key))
-            {
-                _hotkeys.Add(_currentId, callback);
-            }
-            else
-            {
-                // Fallo silencioso si la hotkey ya está ocupada
-                System.Diagnostics.Debug.WriteLine($"Failed to register hotkey with modifiers {modifiers} and key {key}.");
-            }
+            _logger.LogWarning($"Failed to register hotkey (Modifiers: {modifiers}, Key: {key}). It may be in use by another application.");
         }
+    }
 
-        private void ThreadPreprocessMessageMethod(ref MSG msg, ref bool handled)
+    private void ThreadPreprocessMessageMethod(ref MSG msg, ref bool handled)
+    {
+        if (!handled && msg.message == WM_HOTKEY)
         {
-            if (!handled && msg.message == WM_HOTKEY)
+            int id = msg.wParam.ToInt32();
+            if (_hotkeys.TryGetValue(id, out var callback))
             {
-                int id = msg.wParam.ToInt32();
-                if (_hotkeys.TryGetValue(id, out var callback))
-                {
-                    callback.Invoke();
-                    handled = true;
-                }
+                callback.Invoke();
+                handled = true;
             }
         }
+    }
 
-        public void Dispose()
+    public void Dispose()
+    {
+        ComponentDispatcher.ThreadPreprocessMessage -= ThreadPreprocessMessageMethod;
+        foreach (var id in _hotkeys.Keys)
         {
-            ComponentDispatcher.ThreadPreprocessMessage -= ThreadPreprocessMessageMethod;
-            foreach (var id in _hotkeys.Keys)
-            {
-                UnregisterHotKey(_hWnd, id);
-            }
-            _hotkeys.Clear();
+            UnregisterHotKey(_hWnd, id);
         }
+        _hotkeys.Clear();
     }
 }
