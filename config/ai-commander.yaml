@@ -1,0 +1,48 @@
+version: 1
+
+provider_priority:
+  - antigravity
+  - vscode
+  - claude
+
+providers:
+  antigravity:
+    enabled: true
+    process_name: "antigravity"
+    actions:
+      accept:
+        key_sequence: ["y", "Enter"]
+      deny:
+        key_sequence: ["n", "Enter"]
+      accept_all:
+        key_sequence: ["a", "Enter"]
+      skip:
+        key_sequence: ["Escape"]
+
+  vscode:
+    enabled: true
+    process_name: "code"
+    actions:
+      accept:
+        key_sequence: ["Tab"]
+      deny:
+        key_sequence: ["Escape"]
+      accept_diff:
+        key_sequence: ["Ctrl+Shift+P", "Accept All Changes", "Enter"]
+      deny_diff:
+        key_sequence: ["Ctrl+Shift+P", "Discard All Changes", "Enter"]
+
+  claude:
+    enabled: true
+    process_name: "claude"
+    actions:
+      accept:
+        key_sequence: ["Tab"]
+      deny:
+        key_sequence: ["Escape"]
+
+hotkeys:
+  "ctrl+alt+win+o": "accept"
+  "ctrl+alt+win+p": "deny"
+  "ctrl+alt+win+leftbracket": "accept_all"
+  "escape": "skip"
