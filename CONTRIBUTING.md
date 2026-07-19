@@ -13,13 +13,27 @@ The project uses C# .NET 8 WPF. You will need a Windows environment to run and b
 ### Prerequisites
 - .NET 8.0 SDK
 - Windows OS (WPF dependency)
+- Node.js (for commit linting tools only)
 
-## Pull Request Process
+### Local Tooling Setup
+Run the following commands to install dev tools and activate git hooks:
+```bash
+npm install
+npx lefthook install
+```
+This will ensure your commits adhere to our conventional commits standard and code is formatted correctly.
 
-1. Fork the repo and create your branch from `main`.
-2. If you've added code that should be tested, add tests to `AICommander.Tests`.
-3. Ensure the test suite passes (`dotnet test`).
-4. Make sure your code lints and builds correctly (`dotnet build`).
+## Branch Workflow & Pull Request Process
+
+We use a `develop` & `main` branch strategy:
+- `develop` is the integration branch.
+- `main` is reserved for releases.
+
+1. Fork the repo and create your feature branch from `develop`.
+2. Ensure you use **Conventional Commits** (e.g., `feat: add new provider`, `fix: parsing bug`).
+3. If you've added code that should be tested, add tests to `AICommander.Tests`.
+4. Ensure the test suite passes (`dotnet test`).
+5. Open a Pull Request targeting the `develop` branch.
 
 ## Architecture and Guidelines
 

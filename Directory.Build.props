@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <!-- Injected by CI via -p:Version=x.y.z; defaults to 0.1.0 locally -->
+    <Version Condition="'$(BUILD_VERSION)' != ''">$(BUILD_VERSION)</Version>
+    <Version Condition="'$(BUILD_VERSION)' == ''">0.1.0</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <Authors>pablousx</Authors>
+    <Company>AI Commander</Company>
+    <Product>AI Commander</Product>
+    <Copyright>Copyright © 2024</Copyright>
+    <RepositoryUrl>https://github.com/pablousx/ai-commander</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+</Project>
