@@ -1,24 +1,23 @@
 # AI Commander
 
+<div align="center">
+  <img src="assets/logo.png" alt="AI Commander Logo" width="200"/>
+</div>
+
 A lightweight C# WPF Windows daemon designed to intercept global hotkeys and translate them into specific actions for AI agents like Antigravity, VS Code, and Claude.
 
 This project was conceived to work alongside physical macro keyboards (e.g., CH57x) to map physical keys to universal actions (e.g., "Accept", "Deny", "Next"), regardless of which application currently has focus.
 
-## Architecture
+## Table of Contents
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Development](#development)
+- [Documentation](#documentation)
+- [Extending the Project](#extending-the-project)
 
-The solution is structured into three main projects:
-- **AICommander.App**: WPF application. Contains `TrayIcon` and `MainWindow` (configuration UI). Acts as the executable host.
-- **AICommander.Core**: Core business logic, YAML configuration parsing, hotkey management via P/Invoke `RegisterHotKey`, and provider implementations. It is kept independent of WPF UI dependencies.
-- **AICommander.Tests**: Unit tests using xUnit.
+## Usage
 
-### How Hotkeys Work
-
-1. User presses a global hotkey (e.g., `Ctrl+Alt+Win+O`).
-2. `GlobalHotkeyManager` intercepts this via Win32 `WM_HOTKEY` messages.
-3. The hotkey is mapped to a logical action string (e.g., `"accept"`).
-4. `ActionDispatcher` asks `ProviderRegistry` for the highest priority provider that is currently running and visible.
-5. The chosen provider reads its `ActionConfig` for `"accept"` to get a specific `KeySequence` (e.g., `["y", "Enter"]`).
-6. The provider brings its window to the front briefly using `SetForegroundWindow`, sends the keys via `SendInput`, and restores focus. (Direct `PostMessage` is avoided for reliability).
+Simply run `AICommander.App.exe`. An icon will appear in the System Tray, from which you can access the graphical configuration.
 
 ## Configuration
 
@@ -29,14 +28,24 @@ Edit the `config/ai-commander.yaml` file to:
 
 *Note: During development, the config file in `bin/Debug/net8.0-windows` might not reflect the one in the project root. The `ConfigLoader` has a fallback logic traversing parent directories to find `config/ai-commander.yaml`.*
 
-## Usage
-
-Simply run `AICommander.App.exe`. An icon will appear in the System Tray, from which you can access the graphical configuration.
+## Development
 
 ### Common Development Commands
-- **Build**: `dotnet build`
+- **Setup tooling**: `dotnet tool restore` then `dotnet husky install`
+- **Build**: `dotnet build AICommander.sln`
 - **Run**: `dotnet run --project src/AICommander.App`
-- **Test**: `dotnet test`
+- **Test**: `dotnet test AICommander.sln`
+- **Format verify**: `dotnet format AICommander.sln --verify-no-changes --severity error`
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for code quality gates and [`.agents/AGENTS.md`](.agents/AGENTS.md) for architecture rules.
+
+## Documentation
+
+For more detailed technical information, please refer to the documentation:
+
+- [Architecture & Hotkey Flow](docs/architecture.md)
+- [Providers](docs/providers.md)
+- [Contributing](CONTRIBUTING.md)
 
 ## Extending the Project (AI Agent Skills)
 

@@ -1,48 +1,32 @@
 version: 1
-
 provider_priority:
-  - antigravity
-  - vscode
-  - claude
-
+- antigravity
+- Custom App
 providers:
   antigravity:
     enabled: true
-    process_name: "antigravity"
+    process_name: Antigravity IDE.exe
+    icon: pack://application:,,,/Assets/antigravity.png
     actions:
       accept:
-        key_sequence: ["y", "Enter"]
-      deny:
-        key_sequence: ["n", "Enter"]
-      accept_all:
-        key_sequence: ["a", "Enter"]
-      skip:
-        key_sequence: ["Escape"]
-
-  vscode:
+        key_sequence:
+        - Ctrl
+        - T
+      reject:
+        key_sequence:
+        - escape
+  Custom App:
     enabled: true
-    process_name: "code"
+    process_name: notepad.exe
+    icon: pack://application:,,,/Assets/logo.ico
     actions:
-      accept:
-        key_sequence: ["Tab"]
-      deny:
-        key_sequence: ["Escape"]
-      accept_diff:
-        key_sequence: ["Ctrl+Shift+P", "Accept All Changes", "Enter"]
-      deny_diff:
-        key_sequence: ["Ctrl+Shift+P", "Discard All Changes", "Enter"]
-
-  claude:
-    enabled: true
-    process_name: "claude"
-    actions:
-      accept:
-        key_sequence: ["Tab"]
-      deny:
-        key_sequence: ["Escape"]
-
+      no:
+        key_sequence:
+        - Ctrl
+        - T
 hotkeys:
-  "ctrl+alt+win+o": "accept"
-  "ctrl+alt+win+p": "deny"
-  "ctrl+alt+win+leftbracket": "accept_all"
-  "escape": "skip"
+  Ctrl+Shift+Enter: accept
+  Ctrl+Shift+P: no
+settings:
+  auto_start_on_boot: true
+  show_tray_icon: true

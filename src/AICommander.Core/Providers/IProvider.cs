@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using AICommander.Core.Config;
 
 namespace AICommander.Core.Providers;
@@ -35,7 +34,7 @@ public interface IProvider
     /// </summary>
     /// <returns>True if visible; otherwise, false.</returns>
     bool IsVisible();
-    
+
     /// <summary>
     /// Executes an action by sending the provider's action keys
     /// to the target window. The keys are configured in the YAML file,

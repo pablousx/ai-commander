@@ -1,20 +1,19 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Windows;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using System.Windows.Interop;
+using AICommander.App.ViewModels;
+using AICommander.Core.Actions;
 using AICommander.Core.Config;
 using AICommander.Core.HotkeyManager;
 using AICommander.Core.Providers;
 using AICommander.Core.Providers.Antigravity;
-using AICommander.Core.Providers.VSCode;
 using AICommander.Core.Providers.Claude;
-using AICommander.Core.Actions;
+using AICommander.Core.Providers.VSCode;
+using AICommander.Core.System;
 using AICommander.Core.Utilities;
-using System.Windows.Interop;
 using Hardcodet.Wpf.TaskbarNotification;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace AICommander.App;
 
@@ -25,8 +24,10 @@ public partial class App : Application
     private TaskbarIcon? _taskbarIcon;
     private MainWindow? _mainWindow;
 
-    private void Application_Startup(object sender, StartupEventArgs e)
+    protected override void OnStartup(StartupEventArgs e)
     {
+        base.OnStartup(e);
+
         try
         {
             var services = new ServiceCollection();
@@ -40,9 +41,14 @@ public partial class App : Application
 
             // Initialize Hotkey Manager
             _hotkeyManager = new GlobalHotkeyManager(helper.Handle, _serviceProvider.GetRequiredService<ILogger<GlobalHotkeyManager>>());
-            
-            RegisterHotkeys(_serviceProvider.GetRequiredService<AICommanderConfig>(), _serviceProvider.GetRequiredService<ActionDispatcher>());
-            SetupTaskbarIcon();
+
+            var configManager = _serviceProvider.GetRequiredService<ConfigManager>();
+            RegisterHotkeys(configManager.CurrentConfig, _serviceProvider.GetRequiredService<ActionDispatcher>());
+
+            if (configManager.CurrentConfig.Settings.ShowTrayIcon)
+            {
+                SetupTaskbarIcon();
+            }
         }
         catch (Exception ex)
         {
@@ -50,37 +56,44 @@ public partial class App : Application
             Current.Shutdown();
         }
     }
-    
+
     private void ConfigureServices(IServiceCollection services)
     {
         // Logging
-        services.AddLogging(builder => 
+        services.AddLogging(builder =>
         {
             builder.AddConsole();
         });
 
         // Config
         var configPath = GetConfigPath();
-        var config = ConfigLoader.Load(configPath);
-        services.AddSingleton(config);
+        services.AddSingleton(new ConfigManager(configPath));
+        // Provide CurrentConfig for compatibility with existing services
+        services.AddSingleton(sp => sp.GetRequiredService<ConfigManager>().CurrentConfig);
 
         // Providers
         services.AddSingleton<IProvider, AntigravityProvider>();
         services.AddSingleton<IProvider, VSCodeProvider>();
         services.AddSingleton<IProvider, ClaudeProvider>();
 
+        // System
+        services.AddSingleton<SystemIntegrationService>();
+
         // Registry & Dispatcher
-        services.AddSingleton<ProviderRegistry>(sp => 
+        services.AddSingleton<ProviderRegistry>(sp =>
         {
             var registry = new ProviderRegistry();
             registry.Initialize(sp.GetRequiredService<AICommanderConfig>(), sp.GetServices<IProvider>());
             return registry;
         });
-        
+
         services.AddSingleton<ActionDispatcher>();
 
-        // Windows
+        // Windows and ViewModels
+        services.AddTransient<MainViewModel>();
+        services.AddTransient<SettingsViewModel>();
         services.AddSingleton<MainWindow>();
+        services.AddTransient<SettingsWindow>();
     }
 
     private static string GetConfigPath()
@@ -102,6 +115,16 @@ public partial class App : Application
         return configPath;
     }
 
+    public void ReloadHotkeys()
+    {
+        _hotkeyManager?.ClearHotkeys();
+        if (_serviceProvider != null)
+        {
+            var configManager = _serviceProvider.GetRequiredService<ConfigManager>();
+            RegisterHotkeys(configManager.CurrentConfig, _serviceProvider.GetRequiredService<ActionDispatcher>());
+        }
+    }
+
     private void RegisterHotkeys(AICommanderConfig config, ActionDispatcher dispatcher)
     {
         foreach (var kvp in config.Hotkeys)
@@ -118,24 +141,38 @@ public partial class App : Application
                     if (_taskbarIcon != null)
                     {
                         // Fire-and-forget UI update
-                        _ = Current.Dispatcher.InvokeAsync(() => 
+                        _ = Current.Dispatcher.InvokeAsync(() =>
                         {
                             _taskbarIcon.ShowBalloonTip("Action Triggered", $"Executing: {action}", BalloonIcon.Info);
                         });
                     }
-                    
+
                     await dispatcher.DispatchAsync(action).ConfigureAwait(false);
                 });
             }
         }
     }
-    
+
     private void SetupTaskbarIcon()
     {
+        string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "logo.ico");
         _taskbarIcon = new TaskbarIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = File.Exists(iconPath) ? new System.Drawing.Icon(iconPath) : System.Drawing.SystemIcons.Application,
             ToolTipText = "AI Commander"
+        };
+
+        _taskbarIcon.TrayLeftMouseDown += (s, ev) =>
+        {
+            if (_mainWindow != null)
+            {
+                _mainWindow.Show();
+                if (_mainWindow.WindowState == WindowState.Minimized)
+                {
+                    _mainWindow.WindowState = WindowState.Normal;
+                }
+                _mainWindow.Activate();
+            }
         };
 
         var menu = new System.Windows.Controls.ContextMenu();

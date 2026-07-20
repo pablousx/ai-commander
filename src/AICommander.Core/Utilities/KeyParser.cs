@@ -1,5 +1,5 @@
-using System;
-using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Windows.Input;
 
 namespace AICommander.Core.Utilities;
 
@@ -8,55 +8,25 @@ namespace AICommander.Core.Utilities;
 /// </summary>
 public static class KeyParser
 {
-    private static readonly Dictionary<string, ushort> _keyMap = new(StringComparer.OrdinalIgnoreCase)
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern short VkKeyScan(char ch);
+
+    // Aliases for keys that don't parse neatly via single char or WPF Key Enum
+    private static readonly Dictionary<string, ushort> _keyAliasMap = new(StringComparer.OrdinalIgnoreCase)
     {
         { "backspace", 0x08 },
-        { "tab", 0x09 },
-        { "enter", 0x0D },
         { "return", 0x0D },
-        { "escape", 0x1B },
-        { "space", 0x20 },
-        { "pageup", 0x21 },
-        { "pagedown", 0x22 },
-        { "end", 0x23 },
-        { "home", 0x24 },
-        { "left", 0x25 },
+        { "ctrl", 0xA2 },
+        { "control", 0xA2 },
+        { "alt", 0xA4 },
+        { "shift", 0xA0 },
+        { "win", 0x5B },
+        { "windows", 0x5B },
         { "arrowleft", 0x25 },
-        { "up", 0x26 },
         { "arrowup", 0x26 },
-        { "right", 0x27 },
         { "arrowright", 0x27 },
-        { "down", 0x28 },
-        { "arrowdown", 0x28 },
-        { "delete", 0x2E },
-        { "leftbracket", 0xDB },
-        { "[", 0xDB },
-        { "backslash", 0xDC },
-        { "\\", 0xDC },
-        { "rightbracket", 0xDD },
-        { "]", 0xDD }
+        { "arrowdown", 0x28 }
     };
-
-    static KeyParser()
-    {
-        // Add A-Z
-        for (char c = 'A'; c <= 'Z'; c++)
-        {
-            _keyMap.Add(c.ToString(), (ushort)c);
-        }
-        
-        // Add 0-9
-        for (char c = '0'; c <= '9'; c++)
-        {
-            _keyMap.Add(c.ToString(), (ushort)c);
-        }
-
-        // Add F1-F24
-        for (int i = 1; i <= 24; i++)
-        {
-            _keyMap.Add($"F{i}", (ushort)(0x70 + i - 1));
-        }
-    }
 
     /// <summary>
     /// Parses a key string to its corresponding Virtual-Key code.
@@ -66,10 +36,29 @@ public static class KeyParser
     public static ushort ParseKey(string keyString)
     {
         if (string.IsNullOrWhiteSpace(keyString)) return 0;
-        
-        if (_keyMap.TryGetValue(keyString, out var vk))
+
+        string lower = keyString.Trim().ToLowerInvariant();
+
+        // 1. Check known aliases
+        if (_keyAliasMap.TryGetValue(lower, out var vk))
         {
             return vk;
+        }
+
+        // 2. If it's a single character, use OS VkKeyScan
+        if (keyString.Length == 1)
+        {
+            short scan = VkKeyScan(keyString[0]);
+            if (scan != -1)
+            {
+                return (ushort)(scan & 0xFF);
+            }
+        }
+
+        // 3. Try WPF Key Enum parsing for things like "F1", "Enter", "Space", "PageUp", etc.
+        if (Enum.TryParse<Key>(keyString, true, out var wpfKey))
+        {
+            return (ushort)KeyInterop.VirtualKeyFromKey(wpfKey);
         }
 
         return 0;

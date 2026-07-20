@@ -5,6 +5,8 @@ description: 'Ensure .NET/C# code meets best practices for the solution/project.
 
 # .NET/C# Best Practices
 
+> **Repo note:** AI Commander is a .NET 8 WPF/hotkey app. Tests use **xUnit** (not MSTest). Ignore Semantic Kernel / Command Handler guidance below unless it clearly applies. Prefer patterns in `.agents/AGENTS.md` and `wpf-best-practices` when they conflict with this imported skill.
+
 Your task is to ensure .NET/C# code in ${selection} meets the best practices specific to this solution/project. This includes:
 
 ## Documentation & Structure

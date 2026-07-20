@@ -1,9 +1,6 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using AICommander.Core.Config;
 using AICommander.Core.Providers;
+using Microsoft.Extensions.Logging;
 
 namespace AICommander.Core.Actions;
 
@@ -38,7 +35,7 @@ public class ActionDispatcher
         try
         {
             var parts = actionId.Split('.');
-            
+
             IProvider? activeProvider = null;
             string actionName = actionId;
             ProviderConfig? providerConfig = null;
@@ -49,7 +46,7 @@ public class ActionDispatcher
                 var providerName = parts[0];
                 actionName = parts[1];
                 activeProvider = _registry.GetProviderByName(providerName);
-                
+
                 if (activeProvider != null)
                 {
                     // Case-insensitive lookup

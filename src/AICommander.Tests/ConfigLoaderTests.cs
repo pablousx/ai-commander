@@ -1,5 +1,3 @@
-using System.IO;
-using Xunit;
 using AICommander.Core.Config;
 
 namespace AICommander.Tests;
@@ -38,16 +36,16 @@ hotkeys:
             Assert.Single(config.ProviderPriority);
             Assert.Equal("antigravity", config.ProviderPriority[0]);
             Assert.True(config.Providers.ContainsKey("antigravity"));
-            
+
             var provider = config.Providers["antigravity"];
             Assert.True(provider.Enabled);
             Assert.Equal("antigravity", provider.ProcessName);
             Assert.True(provider.Actions.ContainsKey("accept"));
-            
+
             var action = provider.Actions["accept"];
             Assert.Equal(2, action.KeySequence.Count);
             Assert.Equal("y", action.KeySequence[0]);
-            
+
             Assert.True(config.Hotkeys.ContainsKey("ctrl+alt+win+o"));
             Assert.Equal("accept", config.Hotkeys["ctrl+alt+win+o"]);
         }

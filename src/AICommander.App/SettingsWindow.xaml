@@ -1,0 +1,36 @@
+<Window x:Class="AICommander.App.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings" Height="250" Width="350"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Icon="Assets/logo.ico"
+        Background="#F0F2F5">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Global Settings" FontSize="20" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,15"/>
+
+        <StackPanel Grid.Row="1">
+            <CheckBox Content="Start with Windows" IsChecked="{Binding AutoStartOnBoot}" 
+                      Margin="0,0,0,10" Foreground="#333" FontSize="14" Cursor="Hand" />
+            
+            <CheckBox Content="Show System Tray Icon" IsChecked="{Binding ShowTrayIcon}" 
+                      Margin="0,0,0,10" Foreground="#333" FontSize="14" Cursor="Hand" />
+                      
+            <TextBlock Text="Note: Changing the tray icon setting requires an app restart to take full effect." 
+                       Foreground="#888" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <Border Grid.Row="2" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0" Margin="-20,15,-20,-20" Padding="20,15">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Close" Width="80" Height="30" Click="Close_Click" 
+                        Background="#F3F3F3" Foreground="#333" FontWeight="SemiBold" BorderBrush="#CCC" BorderThickness="1" Cursor="Hand"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -1,4 +1,3 @@
-using Xunit;
 using AICommander.Core.Utilities;
 
 namespace AICommander.Tests;

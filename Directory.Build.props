@@ -11,5 +11,17 @@
     <Copyright>Copyright © 2024</Copyright>
     <RepositoryUrl>https://github.com/pablousx/ai-commander</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+    <!-- Shared language / analysis defaults -->
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
+
+  <Target Name="Husky" BeforeTargets="Build" Condition="'$(IsCrossTargetingBuild)' == 'true' Or '$(TargetFramework)' == '$(TargetFrameworks)'">
+    <Exec Command="dotnet tool restore" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="$(MSBuildThisFileDirectory)" />
+    <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="$(MSBuildThisFileDirectory)" />
+  </Target>
 </Project>

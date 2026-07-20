@@ -1,0 +1,20 @@
+---
+description: .NET formatting, analyzers, and quality gates for AI Commander
+globs: "**/*.{cs,csproj,xaml,props,sln}"
+alwaysApply: false
+---
+
+# .NET code quality
+
+- Style source of truth is root `.editorconfig`; analyzers are enabled via `Directory.Build.props` (`EnableNETAnalyzers`, `EnforceCodeStyleInBuild`).
+- Prefer file-scoped namespaces, `_camelCase` private fields, and `I`-prefixed interfaces.
+- Before committing, ensure:
+
+```bash
+dotnet format AICommander.sln --verify-no-changes --severity error
+dotnet build AICommander.sln
+dotnet test AICommander.sln
+```
+
+- Local hooks (Husky.Net) already run format verify and CommitLint.Net; do not skip them.
+- Architecture rules and hotkey gotchas live in `.agents/AGENTS.md`.

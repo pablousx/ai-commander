@@ -24,9 +24,17 @@ AI Commander is a lightweight C# WPF daemon that intercepts global hotkeys and t
 6. The provider brings its window to the front briefly, sends the keys via `SendInput`, and restores focus.
 
 ## Common Commands
-- **Build**: `dotnet build`
+- **Build**: `dotnet build AICommander.sln`
 - **Run**: `dotnet run --project src/AICommander.App`
-- **Test**: `dotnet test`
+- **Test**: `dotnet test AICommander.sln`
+- **Format verify**: `dotnet format AICommander.sln --verify-no-changes --severity error`
+- **Tooling setup**: `dotnet tool restore` then `dotnet husky install`
+
+## Code Quality
+- Shared style lives in `.editorconfig`; SDK analyzers and `EnforceCodeStyleInBuild` are enabled in `Directory.Build.props`.
+- Pre-commit runs `dotnet format --verify-no-changes --severity error`; commit-msg runs CommitLint.Net (`commit-message-config.json`).
+- CI also verifies formatting and runs the full solution build/test suite.
+- Before committing, agents should run format verify, build, and tests (see Common Commands).
 
 ## Known Gotchas
 - **Config file location**: During development, the config file in `bin/Debug/net8.0-windows` might not reflect the one in the project root. The `ConfigLoader` has a fallback logic traversing parent directories to find `config/ai-commander.yaml`.

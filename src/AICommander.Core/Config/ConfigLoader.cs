@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -27,5 +26,22 @@ public static class ConfigLoader
         }
 
         return config;
+    }
+
+    public static void Save(AICommanderConfig config, string filePath)
+    {
+        var serializer = new SerializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .Build();
+
+        var yaml = serializer.Serialize(config);
+
+        var directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        File.WriteAllText(filePath, yaml);
     }
 }

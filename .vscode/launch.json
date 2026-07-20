@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET Core Launch (WPF)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/AICommander.App/bin/Debug/net8.0-windows/AICommander.App.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/AICommander.App",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        }
+    ]
+}
