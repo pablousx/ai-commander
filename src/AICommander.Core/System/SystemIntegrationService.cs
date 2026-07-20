@@ -20,7 +20,7 @@ public class SystemIntegrationService
 
             if (enable)
             {
-                string exePath = global::System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+                string? exePath = global::System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
                 if (!string.IsNullOrEmpty(exePath))
                 {
                     key.SetValue(AppName, $"\"{exePath}\"");

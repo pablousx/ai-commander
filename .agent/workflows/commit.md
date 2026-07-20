@@ -78,9 +78,11 @@ ci: validate conventional commits with CommitLint.Net
 
 4. Verify before commit when code changed:
    ```bash
-   dotnet format AICommander.sln --verify-no-changes --severity error
+   dotnet format AICommander.sln --verify-no-changes
+   dotnet build AICommander.sln
    dotnet test AICommander.sln
    ```
+   Core `feat`/`fix` changes should already include tests from pragmatic TDD (see [docs/testing.md](../../docs/testing.md)); this step only verifies the suite is green.
 
 5. Commit using a HEREDOC (or equivalent) so the message keeps formatting. On Windows PowerShell:
    ```powershell
@@ -91,10 +93,12 @@ ci: validate conventional commits with CommitLint.Net
    "@
    ```
    Hooks run automatically:
-   - `pre-commit` → `dotnet format --verify-no-changes --severity error`
+   - `pre-commit` → `dotnet format --verify-no-changes`
    - `commit-msg` → `dotnet commit-lint` with `commit-message-config.json`
+   - `pre-push` → `dotnet test AICommander.sln` (when C#/project files changed)
 
 6. If `pre-commit` fails: run `dotnet format AICommander.sln`, re-stage, create a **new** commit attempt.
    If `commit-msg` fails: fix the message and commit again (do not amend unless the user explicitly asks and amend rules allow it).
+   If `pre-push` fails: fix tests, commit the fix, push again.
 
 7. Confirm success with `git status`. Do not push unless the user asks.

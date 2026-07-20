@@ -25,7 +25,12 @@ public static class KeyParser
         { "arrowleft", 0x25 },
         { "arrowup", 0x26 },
         { "arrowright", 0x27 },
-        { "arrowdown", 0x28 }
+        { "arrowdown", 0x28 },
+        // WPF Key enum uses OemOpenBrackets / OemCloseBrackets; accept friendly aliases too
+        { "leftbracket", 0xDB },
+        { "rightbracket", 0xDD },
+        { "oemopenbrackets", 0xDB },
+        { "oemclosebrackets", 0xDD }
     };
 
     /// <summary>
@@ -33,7 +38,7 @@ public static class KeyParser
     /// </summary>
     /// <param name="keyString">The string representation of the key (e.g., "Enter", "A", "LeftBracket").</param>
     /// <returns>The VK code, or 0 if the key is not recognized.</returns>
-    public static ushort ParseKey(string keyString)
+    public static ushort ParseKey(string? keyString)
     {
         if (string.IsNullOrWhiteSpace(keyString)) return 0;
 

@@ -18,10 +18,15 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
-  <Target Name="Husky" BeforeTargets="Build" Condition="'$(IsCrossTargetingBuild)' == 'true' Or '$(TargetFramework)' == '$(TargetFrameworks)'">
-    <Exec Command="dotnet tool restore" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="$(MSBuildThisFileDirectory)" />
-    <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="$(MSBuildThisFileDirectory)" />
+  <!-- Install git hooks locally only; skip in CI and when HUSKY=0 -->
+  <Target Name="Husky" BeforeTargets="Restore;CollectPackageReferences"
+          Condition="'$(HUSKY)' != '0' And '$(CI)' != 'true' And '$(ContinuousIntegrationBuild)' != 'true' And '$(TF_BUILD)' != 'True'">
+    <Exec Command="dotnet tool restore" StandardOutputImportance="Low" StandardErrorImportance="High"
+          WorkingDirectory="$(MSBuildThisFileDirectory)" IgnoreExitCode="true" />
+    <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High"
+          WorkingDirectory="$(MSBuildThisFileDirectory)" IgnoreExitCode="true" />
   </Target>
 </Project>

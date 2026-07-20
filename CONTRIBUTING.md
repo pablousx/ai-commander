@@ -23,10 +23,24 @@ dotnet husky install
 This installs Husky.Net and CommitLint.Net, then wires the `pre-commit` and `commit-msg` hooks so formatting and commit messages are checked locally.
 
 ### Code quality gates
-- **Format**: SDK `dotnet format` driven by [`.editorconfig`](.editorconfig). Locally via the pre-commit hook; also `dotnet format AICommander.sln --verify-no-changes --severity error` in CI (whitespace/style; analyzer warnings do not fail the gate yet).
-- **Analyzers**: `EnableNETAnalyzers` + `EnforceCodeStyleInBuild` in [`Directory.Build.props`](Directory.Build.props) (warnings, not `TreatWarningsAsErrors`).
+- **Format**: SDK `dotnet format` driven by [`.editorconfig`](.editorconfig). Pre-commit + CI run `dotnet format AICommander.sln --verify-no-changes`.
+- **Analyzers**: `EnableNETAnalyzers`, `EnforceCodeStyleInBuild`, and `TreatWarningsAsErrors` in [`Directory.Build.props`](Directory.Build.props).
 - **Commits**: Conventional Commits via CommitLint.Net (`commit-message-config.json`, subject max 90 chars).
-- **Tests**: `dotnet test AICommander.sln` before opening a PR.
+- **Tests**: Pre-push runs `dotnet test AICommander.sln`; also required in CI before merge. See [docs/testing.md](docs/testing.md) for strategy and scope.
+- **Packages**: Central versions in [`Directory.Packages.props`](Directory.Packages.props); Dependabot opens weekly NuGet/Actions PRs.
+
+## Testing (pragmatic TDD)
+
+We use **pragmatic TDD** for Core and other behavior changes:
+
+1. Write a failing test in `AICommander.Tests` first.
+2. Implement until green, then refactor.
+3. Open the PR with a green suite and tests that cover the new behavior.
+
+**Required** when changing `AICommander.Core` behavior (config, dispatch, registry, key parsing, provider selection).  
+**Not required** for pure XAML, docs-only, or thin Win32/UI work that has no extractable logic.
+
+Agents follow the same policy via [`.agents/AGENTS.md`](.agents/AGENTS.md) and [`.cursor/rules/tdd.mdc`](.cursor/rules/tdd.mdc).
 
 ## Commit Messages & Workflow
 
@@ -42,8 +56,8 @@ We use a `develop` & `main` branch strategy:
 
 1. Fork the repo and create your feature branch from `develop`.
 2. Use Conventional Commits (see [`.agent/workflows/commit.md`](.agent/workflows/commit.md)).
-3. If you've added code that should be tested, add tests to `AICommander.Tests`.
-4. Ensure the test suite passes (`dotnet test`).
+3. For Core/behavior changes, follow pragmatic TDD and add or update tests in `AICommander.Tests` (see [docs/testing.md](docs/testing.md)).
+4. Ensure the test suite passes (`dotnet test AICommander.sln`).
 5. Open a Pull Request targeting the `develop` branch.
 
 ## Architecture and Guidelines

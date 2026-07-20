@@ -11,10 +11,12 @@ alwaysApply: false
 - Before committing, ensure:
 
 ```bash
-dotnet format AICommander.sln --verify-no-changes --severity error
+dotnet format AICommander.sln --verify-no-changes
 dotnet build AICommander.sln
 dotnet test AICommander.sln
 ```
 
-- Local hooks (Husky.Net) already run format verify and CommitLint.Net; do not skip them.
+- Local hooks (Husky.Net): pre-commit format verify, pre-push tests, commit-msg CommitLint.Net; do not skip them.
+- Package versions are centralized in `Directory.Packages.props` — do not add `Version=` on `PackageReference` items.
+- For Core/behavior changes, follow pragmatic TDD (`.cursor/rules/tdd.mdc`, [docs/testing.md](docs/testing.md)).
 - Architecture rules and hotkey gotchas live in `.agents/AGENTS.md`.

@@ -35,7 +35,7 @@ Edit the `config/ai-commander.yaml` file to:
 - **Build**: `dotnet build AICommander.sln`
 - **Run**: `dotnet run --project src/AICommander.App`
 - **Test**: `dotnet test AICommander.sln`
-- **Format verify**: `dotnet format AICommander.sln --verify-no-changes --severity error`
+- **Format verify**: `dotnet format AICommander.sln --verify-no-changes`
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for code quality gates and [`.agents/AGENTS.md`](.agents/AGENTS.md) for architecture rules.
 
@@ -45,6 +45,7 @@ For more detailed technical information, please refer to the documentation:
 
 - [Architecture & Hotkey Flow](docs/architecture.md)
 - [Providers](docs/providers.md)
+- [Testing & TDD](docs/testing.md)
 - [Contributing](CONTRIBUTING.md)
 
 ## Extending the Project (AI Agent Skills)

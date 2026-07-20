@@ -10,7 +10,7 @@ public partial class AppSectionControl : UserControl
 {
     private Point _mouseStartPoint;
     private bool _isDragging = false;
-    private ItemsControl _parentItemsControl;
+    private ItemsControl? _parentItemsControl;
     private int _originalIndex;
     private int _currentIndex;
     private double _itemHeight;
@@ -32,7 +32,7 @@ public partial class AppSectionControl : UserControl
         }
     }
 
-    private T FindAncestor<T>(DependencyObject current) where T : DependencyObject
+    private static T? FindAncestor<T>(DependencyObject current) where T : DependencyObject
     {
         do
         {
@@ -72,7 +72,7 @@ public partial class AppSectionControl : UserControl
 
     private void DragHandle_PreviewMouseMove(object sender, MouseEventArgs e)
     {
-        if (!_isDragging) return;
+        if (!_isDragging || _parentItemsControl is null) return;
 
         Point currentMousePoint = e.GetPosition(_parentItemsControl);
         double deltaY = currentMousePoint.Y - _mouseStartPoint.Y;
@@ -88,7 +88,8 @@ public partial class AppSectionControl : UserControl
         DragTransform.Y = deltaY;
 
         int newIndex = _originalIndex + (int)Math.Round(deltaY / _itemHeight);
-        var mainViewModel = _parentItemsControl.DataContext as ViewModels.MainViewModel;
+        if (_parentItemsControl.DataContext is not ViewModels.MainViewModel mainViewModel)
+            return;
 
         if (newIndex < 0) newIndex = 0;
         if (newIndex >= mainViewModel.AppSections.Count) newIndex = mainViewModel.AppSections.Count - 1;
@@ -102,14 +103,17 @@ public partial class AppSectionControl : UserControl
 
     private void ShiftOtherItems()
     {
+        if (_parentItemsControl is null) return;
+
         for (int i = 0; i < _parentItemsControl.Items.Count; i++)
         {
             if (i == _originalIndex) continue;
 
-            if (_parentItemsControl.ItemContainerGenerator.ContainerFromIndex(i) is FrameworkElement container)
+            if (_parentItemsControl.ItemContainerGenerator.ContainerFromIndex(i) is ContentPresenter contentPresenter)
             {
-                var contentPresenter = container as ContentPresenter;
-                var child = VisualTreeHelper.GetChildrenCount(contentPresenter) > 0 ? VisualTreeHelper.GetChild(contentPresenter, 0) as AppSectionControl : null;
+                var child = VisualTreeHelper.GetChildrenCount(contentPresenter) > 0
+                    ? VisualTreeHelper.GetChild(contentPresenter, 0) as AppSectionControl
+                    : null;
 
                 if (child != null)
                 {
@@ -143,7 +147,7 @@ public partial class AppSectionControl : UserControl
 
     private void DragHandle_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (!_isDragging) return;
+        if (!_isDragging || _parentItemsControl is null) return;
 
         _isDragging = false;
         DragHandle.ReleaseMouseCapture();
@@ -159,10 +163,11 @@ public partial class AppSectionControl : UserControl
 
         for (int i = 0; i < _parentItemsControl.Items.Count; i++)
         {
-            if (_parentItemsControl.ItemContainerGenerator.ContainerFromIndex(i) is FrameworkElement container)
+            if (_parentItemsControl.ItemContainerGenerator.ContainerFromIndex(i) is ContentPresenter contentPresenter)
             {
-                var contentPresenter = container as ContentPresenter;
-                var child = VisualTreeHelper.GetChildrenCount(contentPresenter) > 0 ? VisualTreeHelper.GetChild(contentPresenter, 0) as AppSectionControl : null;
+                var child = VisualTreeHelper.GetChildrenCount(contentPresenter) > 0
+                    ? VisualTreeHelper.GetChild(contentPresenter, 0) as AppSectionControl
+                    : null;
                 if (child != null)
                 {
                     child.DragTransform.BeginAnimation(TranslateTransform.YProperty, null);
@@ -236,7 +241,7 @@ public partial class AppSectionControl : UserControl
             var parent = tb.Parent as Grid;
             if (parent == null) return;
 
-            System.Windows.Controls.Primitives.Popup popup = null;
+            System.Windows.Controls.Primitives.Popup? popup = null;
             foreach (UIElement child in parent.Children)
             {
                 if (child is System.Windows.Controls.Primitives.Popup p)

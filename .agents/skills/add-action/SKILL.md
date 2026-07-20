@@ -44,4 +44,14 @@ protected virtual ushort ParseKey(string keyString)
     // ...
 }
 ```
-*Note: Refer to Microsoft's Virtual-Key Codes documentation for the correct hex values.*
+*Note: Refer to Microsoft's Virtual-Key Codes documentation for the correct hex values. New key aliases belong in `KeyParser`, not a copy inside `BaseProvider`.*
+
+## 4. Tests (pragmatic TDD)
+
+Config-only actions (YAML hotkey + per-provider `key_sequence`) usually need **no new unit tests**.
+
+If you add or change `KeyParser` aliases, dispatch/registry rules, or config load/save behavior, write a failing test in `AICommander.Tests` **first**, then implement. See [docs/testing.md](../../../docs/testing.md).
+
+```bash
+dotnet test AICommander.sln
+```

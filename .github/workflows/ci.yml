@@ -42,13 +42,13 @@ jobs:
           }
 
       - name: Verify formatting
-        run: dotnet format AICommander.sln --verify-no-changes --severity error
+        run: dotnet format AICommander.sln --verify-no-changes
 
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Build.props', 'nuget.config') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Build.props', '**/Directory.Packages.props', 'nuget.config') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
 
@@ -56,7 +56,7 @@ jobs:
         run: dotnet restore AICommander.sln
 
       - name: Build
-        run: dotnet build AICommander.sln --no-restore --configuration Release
+        run: dotnet build AICommander.sln --no-restore --configuration Release -p:ContinuousIntegrationBuild=true
 
       - name: Test
         run: dotnet test AICommander.sln --no-build --configuration Release --logger trx --results-directory TestResults/

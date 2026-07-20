@@ -59,3 +59,13 @@ providers:
 ```
 
 `BaseProvider` takes care of putting the window in focus and sending the keys, so typically no further logic is required.
+
+## 4. Tests (pragmatic TDD)
+
+A provider that only inherits `BaseProvider` with no custom `IsRunning` / `IsVisible` / action logic usually needs **no new unit tests**.
+
+If you change Core behavior (registry priority, dispatch routing, config shape/parsing, or `KeyParser`), write or update failing tests in `AICommander.Tests` **first**, then implement. See [docs/testing.md](../../../docs/testing.md).
+
+```bash
+dotnet test AICommander.sln
+```

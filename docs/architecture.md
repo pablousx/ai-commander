@@ -3,7 +3,7 @@
 The solution is structured into three main projects:
 - **AICommander.App**: WPF application. Contains `TrayIcon` and `MainWindow` (configuration UI). Acts as the executable host.
 - **AICommander.Core**: Core business logic, YAML configuration parsing, hotkey management via P/Invoke `RegisterHotKey`, and provider implementations. It is kept independent of WPF UI dependencies.
-- **AICommander.Tests**: Unit tests using xUnit.
+- **AICommander.Tests**: Unit tests using xUnit. See [testing.md](testing.md) for the pragmatic TDD strategy and what is (and is not) covered.
 
 ## How Hotkeys Work
 

@@ -140,8 +140,8 @@ csharp_space_between_method_call_empty_parameter_list_parentheses = false
 csharp_preserve_single_line_statements = true
 csharp_preserve_single_line_blocks = true
 
-# Using directive preferences / IDE0005
-dotnet_diagnostic.IDE0005.severity = warning
+# Using directive preferences (suggestion: IDE0005 needs GenerateDocumentationFile to enforce on build)
+dotnet_diagnostic.IDE0005.severity = suggestion
 
 # Naming conventions
 dotnet_naming_rule.interface_should_be_begins_with_i.severity = warning

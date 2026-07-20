@@ -14,6 +14,7 @@ AI Commander is a lightweight C# WPF daemon that intercepts global hotkeys and t
 3. Providers are located in `src/AICommander.Core/Providers`. All new providers must inherit from `BaseProvider`.
 4. The configuration file is `config/ai-commander.yaml` and the order in `provider_priority` dictates which process receives the keys.
 5. For adding a new provider, follow the `add-provider` skill.
+6. **Pragmatic TDD for Core/behavior changes**: write a failing xUnit test in `AICommander.Tests` first, implement until green, then refactor. Do not ship Core behavior without new or updated tests. Out of scope: pure XAML, docs-only, thin Win32 wrappers unless logic is extractable. See [docs/testing.md](../docs/testing.md) and `.cursor/rules/tdd.mdc`.
 
 ## How Hotkeys Work
 1. User presses a global hotkey (e.g., `Ctrl+Alt+Win+O`).
@@ -27,14 +28,14 @@ AI Commander is a lightweight C# WPF daemon that intercepts global hotkeys and t
 - **Build**: `dotnet build AICommander.sln`
 - **Run**: `dotnet run --project src/AICommander.App`
 - **Test**: `dotnet test AICommander.sln`
-- **Format verify**: `dotnet format AICommander.sln --verify-no-changes --severity error`
+- **Format verify**: `dotnet format AICommander.sln --verify-no-changes`
 - **Tooling setup**: `dotnet tool restore` then `dotnet husky install`
 
 ## Code Quality
-- Shared style lives in `.editorconfig`; SDK analyzers and `EnforceCodeStyleInBuild` are enabled in `Directory.Build.props`.
-- Pre-commit runs `dotnet format --verify-no-changes --severity error`; commit-msg runs CommitLint.Net (`commit-message-config.json`).
-- CI also verifies formatting and runs the full solution build/test suite.
-- Before committing, agents should run format verify, build, and tests (see Common Commands).
+- Shared style lives in `.editorconfig`; SDK analyzers, `EnforceCodeStyleInBuild`, and `TreatWarningsAsErrors` are enabled in `Directory.Build.props`.
+- Pre-commit runs format verify; pre-push runs tests; commit-msg runs CommitLint.Net (`commit-message-config.json`).
+- CI verifies formatting and runs the full solution build/test suite.
+- Before committing/pushing, agents should run format verify, build, and tests (see Common Commands).
 
 ## Known Gotchas
 - **Config file location**: During development, the config file in `bin/Debug/net8.0-windows` might not reflect the one in the project root. The `ConfigLoader` has a fallback logic traversing parent directories to find `config/ai-commander.yaml`.

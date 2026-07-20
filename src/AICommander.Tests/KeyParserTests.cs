@@ -17,6 +17,12 @@ public class KeyParserTests
     [InlineData("F12", 0x7B)]
     [InlineData("LeftBracket", 0xDB)]
     [InlineData("[", 0xDB)]
+    [InlineData("return", 0x0D)]
+    [InlineData("backspace", 0x08)]
+    [InlineData("arrowleft", 0x25)]
+    [InlineData("arrowup", 0x26)]
+    [InlineData("arrowright", 0x27)]
+    [InlineData("arrowdown", 0x28)]
     public void ParseKey_ValidKeys_ReturnsCorrectVkCode(string keyString, ushort expectedVk)
     {
         var result = KeyParser.ParseKey(keyString);
@@ -29,7 +35,7 @@ public class KeyParserTests
     [InlineData(null)]
     [InlineData("UnknownKey")]
     [InlineData("Ctrl+Alt+Del")]
-    public void ParseKey_InvalidOrEmptyKeys_ReturnsZero(string keyString)
+    public void ParseKey_InvalidOrEmptyKeys_ReturnsZero(string? keyString)
     {
         var result = KeyParser.ParseKey(keyString);
         Assert.Equal(0, result);
@@ -54,4 +60,14 @@ public class KeyParserTests
         Assert.Equal((uint)(0x0002 | 0x0004), modifiers);
         Assert.Equal((uint)0, vk);
     }
+
+    [Fact]
+    public void ParseHotkey_ControlAndWindowsSynonyms_MapToSameModifiers()
+    {
+        var (modifiers, vk) = KeyParser.ParseHotkey(["control", "windows", "o"]);
+
+        Assert.Equal((uint)(0x0002 | 0x0008), modifiers);
+        Assert.Equal((uint)0x4F, vk); // 'O'
+    }
 }
+
