@@ -1,32 +1,60 @@
-version: 1
+version: 2
 provider_priority:
-- antigravity
-- Custom App
+  - antigravity
+  - Notepad
+  - vscode
 providers:
   antigravity:
     enabled: true
     process_name: Antigravity IDE.exe
-    icon: pack://application:,,,/Assets/antigravity.png
+    process_names:
+      windows: Antigravity IDE.exe
+      macos: Antigravity
+      linux: antigravity
+    icon: antigravity.png
     actions:
       accept:
         key_sequence:
-        - Ctrl
-        - T
+          - Ctrl
+          - T
       reject:
         key_sequence:
-        - escape
-  Custom App:
+          - Escape
+  Notepad:
     enabled: true
-    process_name: notepad.exe
-    icon: pack://application:,,,/Assets/logo.ico
+    process_name: Notepad.exe
+    process_names:
+      windows: Notepad.exe
+      macos: TextEdit
+      linux: gedit
+    icon: logo.png
     actions:
-      no:
+      "no":
         key_sequence:
-        - Ctrl
-        - T
+          - Ctrl
+          - T
+  vscode:
+    enabled: true
+    process_name: Code.exe
+    process_names:
+      windows: Code.exe
+      macos: Visual Studio Code
+      linux: code
+    icon: vscode.png
+    actions:
+      accept:
+        key_sequence:
+          - Ctrl
+          - T
+      inline_chat:
+        key_sequence:
+          - Ctrl
+          - I
 hotkeys:
-  Ctrl+Shift+Enter: accept
-  Ctrl+Shift+P: no
+  Ctrl+Shift+BracketRight: accept
+  Ctrl+Shift+P: "no"
+  Ctrl+Shift+BracketLeft: accept
 settings:
   auto_start_on_boot: true
   show_tray_icon: true
+  show_action_notifications: true

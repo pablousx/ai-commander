@@ -1,57 +1,70 @@
 # AI Commander
 
 <div align="center">
-  <img src="assets/logo.png" alt="AI Commander Logo" width="200"/>
+  <img src="assets/logo.png" alt="AI Commander logo" width="180">
 </div>
 
-A lightweight C# WPF Windows daemon designed to intercept global hotkeys and translate them into specific actions for AI agents like Antigravity, VS Code, and Claude.
+AI Commander is a lightweight Tauri desktop utility for Windows, macOS, and
+Linux. It turns global hotkeys into application-specific key sequences so one
+macro pad can accept, reject, navigate, or trigger actions in different AI
+coding tools.
 
-This project was conceived to work alongside physical macro keyboards (e.g., CH57x) to map physical keys to universal actions (e.g., "Accept", "Deny", "Next"), regardless of which application currently has focus.
+The configuration window is a small TypeScript/Vite frontend. The resident
+runtime, global shortcut handling, process discovery, focus switching, and
+input injection are native Rust.
 
-## Table of Contents
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [Development](#development)
-- [Documentation](#documentation)
-- [Extending the Project](#extending-the-project)
+## Platform support
 
-## Usage
+| Platform           | Window activation         | Input   | Notes                                                   |
+| ------------------ | ------------------------- | ------- | ------------------------------------------------------- |
+| Windows 10/11      | Win32                     | Enigo   | Fully native                                            |
+| macOS 12+          | AppleScript/System Events | Enigo   | Accessibility permission required                       |
+| Linux X11/XWayland | `xdotool`                 | Enigo   | `xdotool` is installed by the `.deb` package            |
+| Linux Wayland-only | Limited                   | Limited | Compositor security prevents portable global automation |
 
-Simply run `AICommander.App.exe`. An icon will appear in the System Tray, from which you can access the graphical configuration.
+## Run locally
+
+Prerequisites are Node.js 22.18+, pnpm 11.15.1, Rust stable, and the
+[Tauri system dependencies](https://v2.tauri.app/start/prerequisites/) for your
+operating system.
+
+```bash
+pnpm install
+pnpm desktop:dev
+```
+
+Useful commands:
+
+```bash
+pnpm build          # type-check and build the web UI
+pnpm test           # TypeScript and Rust tests
+pnpm lint           # Oxlint and Clippy
+pnpm format:check   # Oxfmt and rustfmt
+pnpm check          # complete local quality gate
+pnpm desktop:build  # native installer/bundle for this OS
+```
 
 ## Configuration
 
-Edit the `config/ai-commander.yaml` file to:
-- Change hotkeys
-- Modify the priority of providers (`provider_priority`)
-- Adjust which keys are sent to each application
+The first run copies the bundled defaults to the OS application config
+directory:
 
-*Note: During development, the config file in `bin/Debug/net8.0-windows` might not reflect the one in the project root. The `ConfigLoader` has a fallback logic traversing parent directories to find `config/ai-commander.yaml`.*
+- Windows: `%APPDATA%\com.pablousx.ai-commander\ai-commander.yaml`
+- macOS: `~/Library/Application Support/com.pablousx.ai-commander/ai-commander.yaml`
+- Linux: `~/.config/com.pablousx.ai-commander/ai-commander.yaml`
 
-## Development
+Use the UI to edit applications, process names, priority, hotkeys, key
+sequences, startup behavior, and notifications. Saves are validated and create
+an `ai-commander.yaml.bak` recovery copy. Version 1 configuration is migrated
+to version 2 automatically.
 
-### Common Development Commands
-- **Setup tooling**: `dotnet tool restore` then `dotnet husky install`
-- **Build**: `dotnet build AICommander.sln`
-- **Run**: `dotnet run --project src/AICommander.App`
-- **Test**: `dotnet test AICommander.sln`
-- **Format verify**: `dotnet format AICommander.sln --verify-no-changes`
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for code quality gates and [`.agents/AGENTS.md`](.agents/AGENTS.md) for architecture rules.
+An unscoped action such as `accept` selects the first running application in
+`provider_priority`. A scoped action such as `vscode.accept` always targets
+that application.
 
 ## Documentation
 
-For more detailed technical information, please refer to the documentation:
-
-- [Architecture & Hotkey Flow](docs/architecture.md)
-- [Providers](docs/providers.md)
-- [Testing & TDD](docs/testing.md)
+- [Architecture](docs/architecture.md)
+- [Applications and actions](docs/providers.md)
+- [Testing](docs/testing.md)
 - [Contributing](CONTRIBUTING.md)
-
-## Extending the Project (AI Agent Skills)
-
-This repository is equipped with custom AI agent skills (located in `.agents/skills`) to streamline development and troubleshooting:
-- **`add-provider`**: Guide to adding support for a new AI agent provider. Providers inherit from `BaseProvider` in `src/AICommander.Core/Providers`.
-- **`add-action`**: Guide to adding new logical actions across providers.
-- **`debug-hotkey`**: Diagnostic guide and checklist for troubleshooting unresponsive global hotkeys.
-- **`wpf-best-practices` & `dotnet-best-practices`**: Best practices for maintaining clean, decoupled MVVM architecture and C# standards.

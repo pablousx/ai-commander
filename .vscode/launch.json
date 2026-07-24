@@ -1,16 +1,16 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": ".NET Core Launch (WPF)",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/AICommander.App/bin/Debug/net8.0-windows/AICommander.App.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}/src/AICommander.App",
-            "stopAtEntry": false,
-            "console": "internalConsole"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Tauri: debug native host",
+      "type": "lldb",
+      "request": "launch",
+      "cargo": {
+        "args": ["build", "--manifest-path", "src-tauri/Cargo.toml"],
+        "filter": { "name": "ai-commander", "kind": "bin" }
+      },
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "frontend: dev"
+    }
+  ]
 }

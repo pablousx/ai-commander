@@ -1,15 +1,48 @@
 # Architecture
 
-The solution is structured into three main projects:
-- **AICommander.App**: WPF application. Contains `TrayIcon` and `MainWindow` (configuration UI). Acts as the executable host.
-- **AICommander.Core**: Core business logic, YAML configuration parsing, hotkey management via P/Invoke `RegisterHotKey`, and provider implementations. It is kept independent of WPF UI dependencies.
-- **AICommander.Tests**: Unit tests using xUnit. See [testing.md](testing.md) for the pragmatic TDD strategy and what is (and is not) covered.
+AI Commander uses a Tauri 2 process with a framework-free TypeScript frontend.
+The split keeps startup and resident memory low while preserving a productive,
+hot-reloaded settings UI.
 
-## How Hotkeys Work
+```text
+TypeScript UI (src/)
+  └─ Tauri invoke/events
+      └─ commands.rs
+          ├─ config.rs       YAML schema, validation, migration, atomic save
+          ├─ shortcuts.rs    global shortcut parsing and registration
+          ├─ runtime.rs      transactional reload and serialized dispatch
+          └─ automation.rs   process discovery, focus, input, focus restore
+```
 
-1. User presses a global hotkey (e.g., `Ctrl+Alt+Win+O`).
-2. `GlobalHotkeyManager` intercepts this via Win32 `WM_HOTKEY` messages.
-3. The hotkey is mapped to a logical action string (e.g., `"accept"`).
-4. `ActionDispatcher` asks `ProviderRegistry` for the highest priority provider that is currently running and visible.
-5. The chosen provider reads its `ActionConfig` for `"accept"` to get a specific `KeySequence` (e.g., `["y", "Enter"]`).
-6. The provider brings its window to the front briefly using `SetForegroundWindow`, sends the keys via `SendInput`, and restores focus. (Direct `PostMessage` is avoided for reliability).
+## Dispatch lifecycle
+
+1. Tauri's global-shortcut plugin receives a registered shortcut.
+2. `RuntimeState` maps it to either `action` or `provider.action`.
+3. For an unscoped action, enabled providers are checked in
+   `provider_priority` order; scoped actions bypass priority selection.
+4. `automation` finds a matching process and activates its visible window.
+5. Enigo sends the configured key sequence with modifiers held safely.
+6. The previously active application is restored.
+7. Dispatches are serialized so overlapping shortcuts cannot interleave input.
+
+Saving is transactional. The new YAML is migrated and validated first,
+shortcut registrations are replaced as a unit, and failures roll back to the
+previous configuration and registrations. The on-disk file is backed up before
+replacement.
+
+## Platform boundary
+
+- Windows uses `EnumWindows`, `ShowWindow`, and `SetForegroundWindow`.
+- macOS uses `osascript`/System Events for process activation and restoration.
+- Linux uses `xdotool` on X11 or XWayland. Pure Wayland deliberately returns an
+  actionable error because compositor-wide input and activation are not
+  portable or generally permitted.
+
+The UI never receives filesystem or shell permissions. Its only privileged
+operations are the narrow commands declared in `commands.rs`.
+
+## Runtime behavior
+
+The app is single-instance and tray-resident. Closing the settings window hides
+it; the tray menu can reopen settings or quit. Autostart and notifications are
+Tauri plugins, while logs use the platform app log directory.

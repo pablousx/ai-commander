@@ -2,80 +2,55 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build",
-      "command": "dotnet",
+      "label": "desktop: dev",
       "type": "process",
-      "args": [
-        "build",
-        "${workspaceFolder}/AICommander.sln",
-        "/property:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary"
-      ],
-      "problemMatcher": "$msCompile",
-      "group": {
-        "kind": "build",
-        "isDefault": true
+      "command": "pnpm",
+      "args": ["desktop:dev"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "frontend: dev",
+      "type": "process",
+      "command": "pnpm",
+      "args": ["dev"],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": {
+          "regexp": "^(.*)$",
+          "message": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE",
+          "endsPattern": "Local:.*1420"
+        }
       }
     },
     {
-      "label": "run",
-      "command": "dotnet",
+      "label": "desktop: build",
       "type": "process",
-      "args": [
-        "run",
-        "--project",
-        "${workspaceFolder}/src/AICommander.App/AICommander.App.csproj"
-      ],
-      "problemMatcher": "$msCompile",
-      "dependsOn": "build"
+      "command": "pnpm",
+      "args": ["desktop:build"],
+      "problemMatcher": []
     },
     {
-      "label": "watch",
-      "command": "dotnet",
+      "label": "check",
       "type": "process",
-      "args": [
-        "watch",
-        "run",
-        "--project",
-        "${workspaceFolder}/src/AICommander.App/AICommander.App.csproj"
-      ],
-      "problemMatcher": "$msCompile",
-      "isBackground": true
+      "command": "pnpm",
+      "args": ["check"],
+      "problemMatcher": [],
+      "group": { "kind": "test", "isDefault": true }
     },
     {
-      "label": "test",
-      "command": "dotnet",
+      "label": "test: watch",
       "type": "process",
-      "args": [
-        "test",
-        "${workspaceFolder}/AICommander.sln"
-      ],
-      "problemMatcher": "$msCompile",
-      "group": {
-        "kind": "test",
-        "isDefault": true
-      }
-    },
-    {
-      "label": "format verify",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "format",
-        "${workspaceFolder}/AICommander.sln",
-        "--verify-no-changes"
-      ],
-      "problemMatcher": "$msCompile"
-    },
-    {
-      "label": "format",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "format",
-        "${workspaceFolder}/AICommander.sln"
-      ],
-      "problemMatcher": "$msCompile"
+      "command": "pnpm",
+      "args": ["test:watch"],
+      "isBackground": true,
+      "problemMatcher": []
     }
   ]
 }

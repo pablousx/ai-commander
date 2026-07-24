@@ -1,0 +1,47 @@
+{
+  "name": "ai-commander",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cross-platform global hotkey router for AI coding agents",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "node scripts/tauri.ts",
+    "desktop:dev": "node scripts/tauri.ts dev",
+    "desktop:build": "node scripts/tauri.ts build",
+    "check": "pnpm format:check && pnpm lint && pnpm knip && pnpm test && pnpm build",
+    "lint": "pnpm lint:frontend && pnpm lint:native",
+    "lint:frontend": "oxlint .",
+    "lint:native": "node scripts/cargo.ts clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings",
+    "knip": "knip",
+    "format": "oxfmt . && node scripts/cargo.ts fmt --manifest-path src-tauri/Cargo.toml",
+    "format:check": "oxfmt --check . && node scripts/cargo.ts fmt --manifest-path src-tauri/Cargo.toml -- --check",
+    "test": "pnpm test:frontend && pnpm test:native",
+    "test:frontend": "vitest run",
+    "test:native": "node scripts/cargo.ts test --manifest-path src-tauri/Cargo.toml",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19",
+    "@commitlint/config-conventional": "^19",
+    "@commitlint/types": "^19",
+    "@tauri-apps/cli": "^2",
+    "@types/node": "^24",
+    "knip": "^6.29.0",
+    "lefthook": "^2.1.10",
+    "oxfmt": "^0.60.0",
+    "oxlint": "^1.45.0",
+    "typescript": "~5.9",
+    "vite": "^7",
+    "vitest": "^3"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "packageManager": "pnpm@11.17.0"
+}

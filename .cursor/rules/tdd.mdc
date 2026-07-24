@@ -1,22 +1,17 @@
 ---
-description: Pragmatic TDD for AI Commander Core and behavior changes
-globs: "src/**/*.{cs,csproj}"
+description: Pragmatic TDD for AI Commander behavior
+globs: "{src/**/*.ts,src-tauri/src/**/*.rs}"
 alwaysApply: false
 ---
 
 # Pragmatic TDD
 
-For behavior changes in `AICommander.Core` (config, dispatch, registry, key parsing, provider selection):
+For configuration, routing, shortcut parsing, migration, and platform-neutral
+automation behavior:
 
-1. Write a **failing** test in `AICommander.Tests` first.
-2. Implement the minimum code to make it pass.
-3. Refactor while keeping the suite green.
+1. Write a failing Vitest or Rust unit test.
+2. Implement the smallest correct change.
+3. Refactor with the suite green.
 
-- Use **xUnit** (`[Fact]` / `[Theory]`) and built-in `Assert.*`.
-- Prefer hand-written `IProvider` fakes over mocking libraries.
-- Run `dotnet test AICommander.sln` before committing code changes.
-- Do not ship Core behavior changes without new or updated tests.
-
-**Out of scope for automated tests:** pure XAML, docs-only, thin Win32 wrappers (`RegisterHotKey`, `SendInput`) unless logic is extracted into testable Core helpers.
-
-Full strategy: [docs/testing.md](docs/testing.md). Architecture rules: [.agents/AGENTS.md](.agents/AGENTS.md).
+Run `pnpm check` before committing. Native OS wrappers and the Tauri window
+lifecycle require target-platform smoke tests in addition to unit tests.

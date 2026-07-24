@@ -1,17 +1,35 @@
 {
   "version": 1,
   "skills": {
-    "dotnet-best-practices": {
-      "source": "github/awesome-copilot",
+    "agents-md": {
+      "source": "getsentry/skills",
       "sourceType": "github",
-      "skillPath": "skills/dotnet-best-practices/SKILL.md",
-      "computedHash": "9ef94db7f06c167d544369817e5a4415eeb7886dcff0d47026837a1aada260e3"
+      "skillPath": "skills/agents-md/SKILL.md",
+      "computedHash": "7ff79d6771cdf3db33606251eb15bbc5203b68a94b036ee471869842118ea02a"
     },
-    "wpf-best-practices": {
-      "source": "jcurbelo/skills",
+    "gha-security-review": {
+      "source": "getsentry/skills",
       "sourceType": "github",
-      "skillPath": "wpf-best-practices/SKILL.md",
-      "computedHash": "34ce37d1bb9e181c44d11ff7b467eeac3431cbfcdb8846c48066168fd2adae7a"
+      "skillPath": "skills/gha-security-review/SKILL.md",
+      "computedHash": "b506580c0c826ed2a5e3e97835eaaa0b3133ba269029ec5213257f5d7cf57f29"
+    },
+    "rust-best-practices": {
+      "source": "apollographql/skills",
+      "sourceType": "github",
+      "skillPath": "skills/rust-best-practices/SKILL.md",
+      "computedHash": "fd336f2f772eb46ddf8658de5f9dd8faa1f35615b316665307fc82eeb4b2e658"
+    },
+    "typescript-best-practices": {
+      "source": "0xbigboss/claude-code",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/typescript-best-practices/SKILL.md",
+      "computedHash": "9866bb48d92a951feafb77f6f48ea39b42c6c1e901788c916d4aad40f60db008"
+    },
+    "vitest-testing": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/vitest-testing/skills/vitest-testing/SKILL.md",
+      "computedHash": "1c24e993c451a720db0c66b444b2623aee3597699c6054858fb8251b38a5eb3b"
     }
   }
 }
