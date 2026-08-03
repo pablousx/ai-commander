@@ -32,7 +32,7 @@
     "@commitlint/types": "^19",
     "@tauri-apps/cli": "^2",
     "@types/node": "^24",
-    "knip": "^6.29.0",
+    "knip": "^6.30.0",
     "lefthook": "^2.1.10",
     "oxfmt": "^0.60.0",
     "oxlint": "^1.45.0",
