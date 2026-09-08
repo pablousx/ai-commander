@@ -34,6 +34,7 @@ type UiState = {
   providers: EditableProvider[];
   isSaving: boolean;
   isDirty: boolean;
+  isSettingsOpen: boolean;
   message: string;
   messageKind: "success" | "error" | "info";
 };
@@ -43,6 +44,7 @@ const state: UiState = {
   providers: [],
   isSaving: false,
   isDirty: false,
+  isSettingsOpen: false,
   message: "Loading configuration…",
   messageKind: "info",
 };
@@ -189,6 +191,8 @@ function buildConfig(): AICommanderConfig {
 }
 
 function render(): void {
+  document.body.classList.toggle("modal-open", state.isSettingsOpen);
+
   const info = state.info;
   if (!info) {
     app.innerHTML = `<main class="loading"><div class="spinner"></div><p>${escapeHtml(state.message)}</p></main>`;
@@ -213,7 +217,10 @@ function render(): void {
           </div>
         </div>
         <div class="topbar-actions">
-          <span class="platform-pill">${escapeHtml(info.platform)}</span>
+          <button class="button button-secondary" id="settings-button" type="button" aria-haspopup="dialog">
+            <span aria-hidden="true">⚙</span>
+            Settings
+          </button>
           <button class="button button-primary" id="save-button" ${state.isSaving || !state.isDirty ? "disabled" : ""}>
             ${state.isSaving ? "Saving…" : state.isDirty ? "Save changes" : "Saved"}
           </button>
@@ -233,24 +240,6 @@ function render(): void {
           </div>
         </section>
 
-        <section class="settings-strip" aria-label="Application settings">
-          <label class="toggle-row">
-            <input id="setting-autostart" type="checkbox" ${info.config.settings.auto_start_on_boot ? "checked" : ""} />
-            <span class="switch"></span>
-            <span><strong>Launch at login</strong><small>Keep shortcuts ready after sign-in</small></span>
-          </label>
-          <label class="toggle-row">
-            <input id="setting-tray" type="checkbox" ${info.config.settings.show_tray_icon ? "checked" : ""} />
-            <span class="switch"></span>
-            <span><strong>Show tray icon</strong><small>Quick access while the window is closed</small></span>
-          </label>
-          <label class="toggle-row">
-            <input id="setting-notifications" type="checkbox" ${info.config.settings.show_action_notifications ? "checked" : ""} />
-            <span class="switch"></span>
-            <span><strong>Action notifications</strong><small>Confirm successful dispatches</small></span>
-          </label>
-        </section>
-
         <section class="section-heading">
           <div>
             <span class="eyebrow">Priority order</span>
@@ -267,17 +256,51 @@ function render(): void {
         </div>
 
         <footer>
-          <div class="status ${state.messageKind}" role="status">
-            <span class="status-dot"></span>
-            ${escapeHtml(state.message)}
+          <div class="footer-status" role="status">
+            ${
+              state.message
+                ? `<span class="status ${state.messageKind}"><span class="status-dot"></span>${escapeHtml(state.message)}</span>`
+                : ""
+            }
           </div>
           <div class="path">
-            <span>Config</span>
+            <button class="button button-secondary config-button" id="open-config" type="button" title="Open config in the default editor">Open YAML config</button>
             <code title="${escapeHtml(info.config_path)}">${escapeHtml(info.config_path)}</code>
           </div>
           <span>v${escapeHtml(info.version)}</span>
         </footer>
       </main>
+
+      <dialog class="settings-modal" id="settings-modal" aria-labelledby="settings-title">
+        <div class="modal-header">
+          <div>
+            <span class="eyebrow">Application</span>
+            <h2 id="settings-title">Settings</h2>
+          </div>
+          <button class="icon-button modal-close" id="settings-close" type="button" aria-label="Close settings">×</button>
+        </div>
+        <div class="settings-list">
+          <label class="toggle-row">
+            <input id="setting-autostart" type="checkbox" ${info.config.settings.auto_start_on_boot ? "checked" : ""} />
+            <span class="switch"></span>
+            <span><strong>Launch at login</strong><small>Keep shortcuts ready after sign-in</small></span>
+          </label>
+          <label class="toggle-row">
+            <input id="setting-tray" type="checkbox" ${info.config.settings.show_tray_icon ? "checked" : ""} />
+            <span class="switch"></span>
+            <span><strong>Show tray icon</strong><small>Quick access while the window is closed</small></span>
+          </label>
+          <label class="toggle-row">
+            <input id="setting-notifications" type="checkbox" ${info.config.settings.show_action_notifications ? "checked" : ""} />
+            <span class="switch"></span>
+            <span><strong>Action notifications</strong><small>Confirm successful dispatches</small></span>
+          </label>
+        </div>
+        <div class="modal-footer">
+          <p>Changes are applied when you save the configuration.</p>
+          <button class="button button-primary" id="settings-done" type="button">Done</button>
+        </div>
+      </dialog>
     </div>
   `;
 
@@ -358,8 +381,27 @@ function markDirty(message = "Unsaved changes"): void {
 }
 
 function bindEvents(): void {
+  const settingsModal = document.querySelector<HTMLDialogElement>("#settings-modal");
+
   document.querySelector("#save-button")?.addEventListener("click", () => {
     void save();
+  });
+  document.querySelector("#open-config")?.addEventListener("click", () => {
+    void openConfig();
+  });
+  document.querySelector("#settings-button")?.addEventListener("click", () => {
+    state.isSettingsOpen = true;
+    render();
+  });
+  for (const id of ["settings-close", "settings-done"]) {
+    document.querySelector(`#${id}`)?.addEventListener("click", closeSettings);
+  }
+  settingsModal?.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeSettings();
+  });
+  settingsModal?.addEventListener("click", (event) => {
+    if (event.target === settingsModal) closeSettings();
   });
   document.querySelector("#add-provider")?.addEventListener("click", () => {
     const select = document.querySelector<HTMLSelectElement>("#template-select");
@@ -441,6 +483,16 @@ function bindEvents(): void {
       }
     }
   }
+
+  if (state.isSettingsOpen && settingsModal && !settingsModal.open) {
+    settingsModal.showModal();
+  }
+}
+
+function closeSettings(): void {
+  state.isSettingsOpen = false;
+  render();
+  document.querySelector<HTMLButtonElement>("#settings-button")?.focus();
 }
 
 function bindSetting(id: string, key: keyof AppInfo["config"]["settings"]): void {
@@ -561,12 +613,24 @@ async function testAction(providerName: string, actionName: string): Promise<voi
   render();
 }
 
+async function openConfig(): Promise<void> {
+  try {
+    await invoke("open_config_file");
+    state.message = "Configuration file opened.";
+    state.messageKind = "success";
+  } catch (error) {
+    state.message = String(error);
+    state.messageKind = "error";
+  }
+  render();
+}
+
 async function load(): Promise<void> {
   try {
     const info = await invoke<AppInfo>("get_app_info");
     state.info = info;
     state.providers = toEditable(info);
-    state.message = "Shortcuts are active.";
+    state.message = "";
     state.messageKind = "success";
     await listen<string>("action-triggered", (event) => {
       state.message = event.payload;

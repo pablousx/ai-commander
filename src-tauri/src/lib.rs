@@ -5,7 +5,9 @@ mod error;
 mod runtime;
 mod shortcuts;
 
-use commands::{apply_system_settings, dispatch_action, get_app_info, save_config};
+use commands::{
+    apply_system_settings, dispatch_action, get_app_info, open_config_file, save_config,
+};
 use config::{config_path, Config};
 use error::{AppError, AppResult};
 use runtime::{handle_shortcut, RuntimeState};
@@ -42,6 +44,7 @@ pub fn run() {
             let config = Config::load(&path).map_err(|error| error.to_string())?;
             let runtime = RuntimeState::new(path, config.clone());
             app.manage(runtime.clone());
+            set_main_window_icon(app.handle())?;
             create_tray(app.handle())?;
             runtime
                 .apply_shortcuts(app.handle(), &config)
@@ -67,10 +70,21 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_app_info,
             save_config,
-            dispatch_action
+            dispatch_action,
+            open_config_file
         ])
         .run(tauri::generate_context!())
         .expect("AI Commander failed to start");
+}
+
+fn set_main_window_icon(app: &AppHandle) -> tauri::Result<()> {
+    let Some(window) = app.get_webview_window("main") else {
+        return Ok(());
+    };
+    let Some(icon) = app.default_window_icon() else {
+        return Ok(());
+    };
+    window.set_icon(icon.clone())
 }
 
 fn create_tray(app: &AppHandle) -> tauri::Result<()> {

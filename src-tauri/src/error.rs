@@ -12,6 +12,8 @@ pub enum AppError {
     Automation(String),
     #[error("Shortcut error: {0}")]
     Shortcut(String),
+    #[error("Could not open configuration file: {0}")]
+    OpenConfig(String),
 }
 
 impl serde::Serialize for AppError {

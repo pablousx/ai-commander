@@ -60,6 +60,17 @@ pub fn dispatch_action(
     state.dispatch(&app, &action_id)
 }
 
+#[tauri::command]
+pub fn open_config_file(state: State<'_, Arc<RuntimeState>>) -> AppResult<()> {
+    if !state.config_path.is_file() {
+        return Err(AppError::OpenConfig(format!(
+            "'{}' does not exist.",
+            state.config_path.display()
+        )));
+    }
+    platform::open_path(&state.config_path)
+}
+
 pub fn apply_system_settings(app: &AppHandle, config: &Config) -> AppResult<()> {
     let autostart = app.autolaunch();
     let result = if config.settings.auto_start_on_boot {
@@ -84,5 +95,97 @@ fn app_info(app: &AppHandle, state: &RuntimeState) -> AppInfo {
             "linux"
         },
         version: app.package_info().version.to_string(),
+    }
+}
+
+#[cfg(target_os = "windows")]
+mod platform {
+    use std::{os::windows::ffi::OsStrExt, path::Path};
+
+    use windows::{
+        core::PCWSTR,
+        Win32::UI::{Shell::ShellExecuteW, WindowsAndMessaging::SW_SHOWNORMAL},
+    };
+
+    use crate::error::{AppError, AppResult};
+
+    pub fn open_path(path: &Path) -> AppResult<()> {
+        let path_wide = path
+            .as_os_str()
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect::<Vec<_>>();
+        let result = unsafe {
+            ShellExecuteW(
+                None,
+                None,
+                PCWSTR(path_wide.as_ptr()),
+                None,
+                None,
+                SW_SHOWNORMAL,
+            )
+        };
+        let result_code = result.0 as isize;
+        if result_code > 32 {
+            Ok(())
+        } else {
+            Err(AppError::OpenConfig(format!(
+                "Windows ShellExecute failed with code {result_code}."
+            )))
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+mod platform {
+    use std::{path::Path, process::Command};
+
+    use crate::error::{AppError, AppResult};
+
+    pub fn open_path(path: &Path) -> AppResult<()> {
+        open_with("open", path)
+    }
+
+    fn open_with(program: &str, path: &Path) -> AppResult<()> {
+        let status = Command::new(program)
+            .arg(path)
+            .status()
+            .map_err(|error| AppError::OpenConfig(error.to_string()))?;
+        status
+            .success()
+            .then_some(())
+            .ok_or_else(|| AppError::OpenConfig(format!("{program} exited with status {status}.")))
+    }
+}
+
+#[cfg(target_os = "linux")]
+mod platform {
+    use std::{path::Path, process::Command};
+
+    use crate::error::{AppError, AppResult};
+
+    pub fn open_path(path: &Path) -> AppResult<()> {
+        let program = "xdg-open";
+        let status = Command::new(program)
+            .arg(path)
+            .status()
+            .map_err(|error| AppError::OpenConfig(error.to_string()))?;
+        status
+            .success()
+            .then_some(())
+            .ok_or_else(|| AppError::OpenConfig(format!("{program} exited with status {status}.")))
+    }
+}
+
+#[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+mod platform {
+    use std::path::Path;
+
+    use crate::error::{AppError, AppResult};
+
+    pub fn open_path(_path: &Path) -> AppResult<()> {
+        Err(AppError::OpenConfig(
+            "Opening files is unsupported on this platform.".into(),
+        ))
     }
 }

@@ -1,12 +1,25 @@
 version: 2
 provider_priority:
-  - antigravity
-  - Notepad
-  - vscode
+- antigravity
+- Notepad
+- vscode
 providers:
+  Notepad:
+    enabled: false
+    process_name: gedit
+    process_names:
+      windows: Notepad.exe
+      macos: TextEdit
+      linux: gedit
+    icon: logo.png
+    actions:
+      no:
+        key_sequence:
+        - Ctrl
+        - T
   antigravity:
-    enabled: true
-    process_name: Antigravity IDE.exe
+    enabled: false
+    process_name: antigravity
     process_names:
       windows: Antigravity IDE.exe
       macos: Antigravity
@@ -15,27 +28,14 @@ providers:
     actions:
       accept:
         key_sequence:
-          - Ctrl
-          - T
+        - Ctrl
+        - T
       reject:
         key_sequence:
-          - Escape
-  Notepad:
-    enabled: true
-    process_name: Notepad.exe
-    process_names:
-      windows: Notepad.exe
-      macos: TextEdit
-      linux: gedit
-    icon: logo.png
-    actions:
-      "no":
-        key_sequence:
-          - Ctrl
-          - T
+        - Escape
   vscode:
     enabled: true
-    process_name: Code.exe
+    process_name: code
     process_names:
       windows: Code.exe
       macos: Visual Studio Code
@@ -44,15 +44,13 @@ providers:
     actions:
       accept:
         key_sequence:
-          - Ctrl
-          - T
+        - Ctrl
+        - T
       inline_chat:
         key_sequence:
-          - Ctrl
-          - I
+        - Ctrl
+        - I
 hotkeys:
-  Ctrl+Shift+BracketRight: accept
-  Ctrl+Shift+P: "no"
   Ctrl+Shift+BracketLeft: accept
 settings:
   auto_start_on_boot: true
